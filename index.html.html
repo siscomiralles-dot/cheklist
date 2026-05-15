@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Checklist">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0e14">
+<title>Checklist de Vol</title>
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" rx="40" fill="%230a0e14"/><path d="M90 30 L120 90 L90 110 L60 90 Z" fill="%2300d68f"/><circle cx="90" cy="135" r="8" fill="%2300d68f"/><rect x="30" y="80" width="120" height="6" fill="%2300d68f"/></svg>'>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e14;
+  --surface: #141921;
+  --surface-2: #1a2030;
+  --surface-3: #232b3d;
+  --border: #2a3343;
+  --border-strong: #3a4356;
+  --text: #e8eef5;
+  --text-2: #8b97ad;
+  --text-3: #5a6478;
+  --accent: #00d68f;
+  --accent-dim: #00a86d;
+  --warn: #ffa726;
+  --danger: #ff4757;
+  --caution: #ffd54f;
+  --shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+[data-theme="night"] {
+  --bg: #0a0203;
+  --surface: #1a0506;
+  --surface-2: #25080a;
+  --surface-3: #2f0c0f;
+  --border: #3a1014;
+  --border-strong: #4a161c;
+  --text: #ff8080;
+  --text-2: #cc5050;
+  --text-3: #884040;
+  --accent: #ff3030;
+  --accent-dim: #cc2020;
+  --warn: #ff5030;
+  --danger: #ff2020;
+  --caution: #ff4040;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Geist', -apple-system, sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background:
+    radial-gradient(ellipse at top, rgba(0, 214, 143, 0.04), transparent 60%),
+    var(--bg);
+}
+
+[data-theme="night"] body {
+  background:
+    radial-gradient(ellipse at top, rgba(255, 48, 48, 0.04), transparent 60%),
+    var(--bg);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.aircraft-selector {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  min-height: 48px;
+  transition: background 0.15s;
+}
+
+.aircraft-selector:active { background: var(--surface-3); }
+
+.aircraft-selector .label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.aircraft-selector .name {
+  font-family: 'Geist Mono', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.aircraft-selector .registration {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.aircraft-info { flex: 1; min-width: 0; }
+.aircraft-info > div { display: flex; gap: 10px; align-items: baseline; }
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-2);
+  transition: all 0.15s;
+}
+
+.icon-btn:active { background: var(--surface-3); color: var(--text); }
+.icon-btn svg { width: 22px; height: 22px; }
+
+/* Phase tabs */
+.phase-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.phase-tabs::-webkit-scrollbar { display: none; }
+
+.phase-tab {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  min-width: 90px;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.phase-tab.active {
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.phase-tab .num {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+}
+
+.phase-tab.active .num { color: var(--accent); }
+
+.phase-tab .name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.phase-tab.active .name { color: var(--text); font-weight: 600; }
+
+.phase-tab .progress-dot {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+.phase-tab.complete .progress-dot { color: var(--accent); }
+
+/* Phase header */
+.phase-header {
+  padding: 18px 16px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.phase-title {
+  font-family: 'Geist', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.phase-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.progress-bar {
+  width: 60px;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+/* Items list */
+.items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 100px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  min-height: 64px;
+  transition: all 0.2s;
+}
+
+.item:active { transform: scale(0.99); }
+
+.item.checked {
+  background: var(--surface-2);
+  border-color: var(--accent-dim);
+  opacity: 0.7;
+}
+
+.item.skipped {
+  background: var(--surface-2);
+  border-color: var(--warn);
+  opacity: 0.7;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid var(--border-strong);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.item.checked .checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.item.skipped .checkbox {
+  background: var(--warn);
+  border-color: var(--warn);
+}
+
+.checkbox svg { width: 20px; height: 20px; opacity: 0; transition: opacity 0.2s; color: var(--bg); }
+.item.checked .checkbox svg, .item.skipped .checkbox svg { opacity: 1; }
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.item-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.005em;
+}
+
+.item.checked .item-label, .item.skipped .item-label { color: var(--text-2); }
+
+.item-value {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.item.checked .item-value { color: var(--text-3); }
+
+.item-note {
+  font-size: 12px;
+  color: var(--text-3);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.item-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+}
+
+.item-action svg { width: 18px; height: 18px; }
+.item-action.danger { color: var(--danger); }
+
+/* Bottom bar */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 50%, transparent);
+  z-index: 5;
+}
+
+.btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  min-height: 50px;
+  transition: all 0.15s;
+}
+
+.btn:active { background: var(--surface-3); transform: scale(0.98); }
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0e14;
+}
+
+.btn.primary:active { background: var(--accent-dim); }
+
+.btn.danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn svg { width: 20px; height: 20px; }
+
+/* Edit mode */
+.editing .item { cursor: default; }
+.editing .item:active { transform: none; }
+
+.edit-banner {
+  background: var(--warn);
+  color: #0a0e14;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.add-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--surface-2);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 12px;
+  width: 100%;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.add-item-btn:active { background: var(--surface-3); }
+.add-item-btn svg { width: 20px; height: 20px; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.25s;
+  box-shadow: var(--shadow);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Form */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.field input, .field textarea, .field select {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--accent);
+}
+
+.field input.mono { font-family: 'Geist Mono', monospace; }
+
+/* Aircraft list */
+.aircraft-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.aircraft-row.active { border-color: var(--accent); }
+.aircraft-row .info { flex: 1; }
+.aircraft-row .reg { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--accent); }
+.aircraft-row .name { font-weight: 600; }
+
+/* Settings */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-row:last-child { border: 0; }
+
+.setting-label { font-size: 15px; font-weight: 500; }
+.setting-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+.toggle {
+  width: 50px;
+  height: 28px;
+  background: var(--surface-3);
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  background: var(--text);
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+
+.toggle.on::after { transform: translateX(22px); background: var(--bg); }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-3);
+}
+
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+/* Welcome / Install hint */
+.install-hint {
+  margin: 16px;
+  padding: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.install-hint strong { color: var(--text); }
+.install-hint .close-hint {
+  float: right;
+  background: none;
+  border: 0;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  margin-left: 8px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 200;
+  animation: slideUp 0.25s;
+  box-shadow: var(--shadow);
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .items { padding: 16px 24px 110px; max-width: 760px; margin: 0 auto; width: 100%; }
+  .phase-header { padding: 22px 24px 8px; max-width: 760px; margin: 0 auto; width: 100%; }
+  .bottom-bar { max-width: 760px; margin: 0 auto; left: 50%; transform: translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="icon-btn" id="aircraftBtn" aria-label="Avions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+    </svg>
+  </button>
+  <div class="aircraft-selector" id="aircraftSelector">
+    <div class="aircraft-info">
+      <div class="label">Avió actiu</div>
+      <div>
+        <div class="name" id="currentAircraftName">—</div>
+        <div class="registration" id="currentAircraftReg">—</div>
+      </div>
+    </div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--text-3)">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </div>
+  <button class="icon-btn" id="settingsBtn" aria-label="Ajustaments">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+</div>
+
+<div class="phase-tabs" id="phaseTabs"></div>
+<div id="installHint"></div>
+
+<div class="phase-header">
+  <h1 class="phase-title" id="phaseTitle">—</h1>
+  <div class="phase-progress">
+    <span id="progressText">0/0</span>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progressBar"></div></div>
+  </div>
+</div>
+
+<div class="items" id="itemsList"></div>
+
+<div class="bottom-bar">
+  <button class="btn danger" id="resetBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/>
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+    </svg>
+    Reset
+  </button>
+  <button class="btn" id="editBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+    Edita
+  </button>
+  <button class="btn primary" id="nextBtn">
+    Següent fase
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  </button>
+</div>
+
+<script>
+// ============= STORAGE LAYER =============
+// Works in both Claude artifacts (window.storage) and standalone (localStorage)
+const storage = {
+  async get(key) {
+    if (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function') {
+      try {
+        const r = await window.storage.get(key);
+        return r ? r.value : null;
+      } catch (e) { return null; }
+    }
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  },
+  async set(key, value) {
+    if (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function') {
+      try { await window.storage.set(key, value); return true; } catch (e) { return false; }
+    }
+    try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
+  }
+};
+
+// ============= DEFAULT DATA =============
+// [phaseId, phaseName, [[label, value, note?], ...]]
+const C172_PHASES = [
+  ['preflight', 'Inspecció Pre-Vol', [
+    ['Documentació avió', 'A bord'],
+    ['Combustible', 'Quantitat / Tipus'],
+    ['Drenatges combustible', 'Sense aigua'],
+    ['Nivell oli', 'Mín 6 qts'],
+    ['Hèlix i spinner', 'Estat'],
+    ['Pneumàtics i frens', 'Pressió / Estat'],
+    ['Superfícies de control', 'Lliures i correctes'],
+    ['Antenes i Pitot', 'Sense tapa / Net'],
+    ['Llums exteriors', 'Funcionen'],
+    ['Portes i finestres', 'Estat'],
+  ]],
+  ['before-start', 'Abans Arrencar', [
+    ['Seients i cinturons', 'Ajustats'],
+    ['Frens estacionament', 'Posats'],
+    ['Comandaments', 'Lliures i correctes'],
+    ['Acceleradors', 'Ralentí'],
+    ['Mescla', 'Empobrida'],
+    ['Magnetos', 'Off'],
+    ['Master switch', 'Off'],
+    ['Briefing seguretat', 'Completat'],
+  ]],
+  ['start', 'Arrencada Motor', [
+    ['Àrea hèlix', 'Lliure - CLEAR PROP'],
+    ['Master switch', 'On'],
+    ['Mescla', 'Rica'],
+    ['Acceleradors', 'Obert 1/4'],
+    ['Bomba combustible', '3-5 seg si calent'],
+    ['Magnetos', 'START'],
+    ['Pressió oli', 'Verd en 30 seg'],
+    ['RPM', '1000-1200'],
+    ['Avionica', 'On'],
+    ['Llums NAV', 'On'],
+  ]],
+  ['before-taxi', 'Abans Rodatge', [
+    ['ATIS', 'Escoltat'],
+    ['Altímetre', 'QNH ajustat'],
+    ['Rumb', 'Comparar gyro/brúixola'],
+    ['Flaps', 'UP'],
+    ['Autorització', 'Demanada'],
+  ]],
+  ['taxi', 'Rodatge', [
+    ['Frens', 'Provats'],
+    ['Indicador rumb', 'Gira correctament'],
+    ['Bola coordinació', 'Lliure'],
+    ['Horitzó artificial', 'Estable'],
+    ['Velocitat rodatge', 'Adequada'],
+  ]],
+  ['before-takeoff', 'Abans Enlairament', [
+    ['Frens estacionament', 'Posats'],
+    ['Cinturons', 'Cordats'],
+    ['Portes', 'Tancades i bloquejades'],
+    ['Comandaments', 'Lliures'],
+    ['Instruments', 'Comprovats'],
+    ['Combustible selector', 'BOTH'],
+    ['Mescla', 'Rica'],
+    ['Acceleradors', '1700 RPM'],
+    ['Magnetos L/R', 'Caiguda <175, dif <50'],
+    ['Calefacció carburador', 'Verificada'],
+    ['T\'s i P\'s', 'Verd'],
+    ['Flaps', 'T/O 0-10°'],
+    ['Trim', 'T/O'],
+    ['Llums STROBE/LAND', 'On'],
+    ['Transponder', 'ALT'],
+    ['Briefing enlairament', 'Completat'],
+  ]],
+  ['takeoff', 'Enlairament', [
+    ['Acceleradors', 'Plens'],
+    ['Pressions/Temp', 'Verds'],
+    ['Velocitat Vr', '~55 KIAS'],
+    ['Vy pujada', '74 KIAS'],
+    ['Velocitat positiva', 'Confirmada'],
+  ]],
+  ['climb', 'Pujada', [
+    ['Velocitat pujada', '80 KIAS'],
+    ['Trim', 'Ajustat'],
+    ['Llum aterratge', 'Off >1000ft AGL'],
+    ['Bomba combustible', 'Off'],
+    ['Flaps', 'UP'],
+  ]],
+  ['cruise', 'Creuer', [
+    ['Potència', '2300-2400 RPM'],
+    ['Mescla', 'Empobrida'],
+    ['Trim', 'Ajustat'],
+    ['Carburador heat', 'Segons necessitat'],
+    ['Posició / Navegació', 'Verificada'],
+  ]],
+  ['descent', 'Descens', [
+    ['Mescla', 'Rica'],
+    ['Potència', 'Reduïda'],
+    ['Trim', 'Ajustat'],
+    ['ATIS destí', 'Escoltat'],
+    ['Briefing aproximació', 'Completat'],
+  ]],
+  ['before-landing', 'Abans Aterratge', [
+    ['Cinturons', 'Cordats'],
+    ['Combustible selector', 'BOTH'],
+    ['Mescla', 'Rica'],
+    ['Carburador heat', 'On si <2000 RPM'],
+    ['Flaps', 'Segons necessitat'],
+    ['Velocitat aproximació', '65-75 KIAS'],
+    ['Llum aterratge', 'On'],
+    ['Tren', 'Si retràctil: DOWN'],
+  ]],
+  ['after-landing', 'Després Aterratge', [
+    ['Flaps', 'UP'],
+    ['Carburador heat', 'Off'],
+    ['Llum aterratge', 'Off'],
+    ['Strobe', 'Off'],
+    ['Transponder', 'STBY'],
+    ['Trim', 'T/O'],
+  ]],
+  ['shutdown', 'Aturada Motor', [
+    ['Frens estacionament', 'Posats'],
+    ['Electrònica', 'Off'],
+    ['Avionica master', 'Off'],
+    ['Acceleradors', '1000 RPM 30 seg'],
+    ['Mescla', 'CUT-OFF'],
+    ['Magnetos', 'Off (després aturada)'],
+    ['Master switch', 'Off'],
+    ['Llaus', 'Treta'],
+    ['Comandaments', 'Bloquejats'],
+    ['Tacs i amarres', 'Posats'],
+  ]],
+  ['emergency', 'Emergències', [
+    ['Fallada motor enlairament', 'Pista recta, no girar', 'Si < 500ft AGL'],
+    ['Fallada motor pujada', 'Mejor camp, mayday', 'Vol l\'avió primer'],
+    ['Foc motor a terra', 'Mescla CUT-OFF, master OFF'],
+    ['Foc motor en vol', 'Mescla CUT-OFF, fuel OFF, descens'],
+    ['Pèrdua comunicacions', '7600, llums, senyals'],
+    ['Velocitat planeig òptim', '68 KIAS'],
+  ]],
+];
+
+const C152_PHASES = [
+  ['preflight', 'Inspecció Pre-Vol', [
+    ['Documentació', 'A bord'],
+    ['Combustible', 'Quantitat / 100LL'],
+    ['Drenatges', 'Sense aigua'],
+    ['Oli', 'Mín 4 qts'],
+    ['Hèlix', 'Estat'],
+    ['Pneumàtics', 'Pressió / Estat'],
+    ['Superfícies control', 'Lliures'],
+    ['Pitot estàtic', 'Net'],
+    ['Llums', 'Funcionen'],
+  ]],
+  ['before-start', 'Abans Arrencar', [
+    ['Cinturons', 'Cordats'],
+    ['Frens estacionament', 'Posats'],
+    ['Acceleradors', 'Ralentí'],
+    ['Mescla', 'Empobrida'],
+    ['Magnetos', 'Off'],
+    ['Master', 'Off'],
+  ]],
+  ['start', 'Arrencada', [
+    ['CLEAR PROP', 'Cridat'],
+    ['Master', 'On'],
+    ['Mescla', 'Rica'],
+    ['Acceleradors', 'Obert 1/4'],
+    ['Magnetos', 'START'],
+    ['Pressió oli', 'Verd 30 seg'],
+    ['RPM', '1000'],
+  ]],
+  ['before-takeoff', 'Abans Enlairament', [
+    ['Frens', 'Posats'],
+    ['Acceleradors', '1700 RPM'],
+    ['Magnetos', 'Caiguda <125, dif <50'],
+    ['Carb heat', 'Verificat'],
+    ['Mescla', 'Rica'],
+    ['Flaps', '0-10°'],
+    ['Cinturons i portes', 'Tancades'],
+  ]],
+  ['takeoff', 'Enlairament', [
+    ['Acceleradors', 'Plens'],
+    ['Vr', '~50 KIAS'],
+    ['Vy', '67 KIAS'],
+  ]],
+  ['cruise', 'Creuer', [
+    ['Potència', '2200-2400 RPM'],
+    ['Mescla', 'Empobrida'],
+  ]],
+  ['before-landing', 'Abans Aterratge', [
+    ['Mescla', 'Rica'],
+    ['Carb heat', 'On'],
+    ['Flaps', 'Segons necessitat'],
+    ['Velocitat', '60-70 KIAS'],
+  ]],
+  ['shutdown', 'Aturada', [
+    ['Mescla', 'CUT-OFF'],
+    ['Magnetos', 'Off'],
+    ['Master', 'Off'],
+    ['Llaus', 'Treta'],
+  ]],
+  ['emergency', 'Emergències', [
+    ['Velocitat planeig', '60 KIAS'],
+    ['Foc motor', 'Mescla CUT-OFF, fuel OFF'],
+    ['Fallada motor', 'Mejor camp + mayday'],
+  ]],
+];
+
+const PA28_PHASES = [
+  ['preflight', 'Inspecció Pre-Vol', [
+    ['Documentació', 'A bord'],
+    ['Combustible', 'Quantitat / Tipus'],
+    ['Drenatges (5 punts)', 'Sense aigua'],
+    ['Oli', 'Mín 6 qts'],
+    ['Hèlix i cap', 'Estat'],
+    ['Tren d\'aterratge', 'Estat'],
+    ['Superfícies control', 'Lliures'],
+    ['Pitot / Estàtic', 'Net'],
+    ['Antenes', 'Estat'],
+  ]],
+  ['before-start', 'Abans Arrencar', [
+    ['Cinturons', 'Cordats'],
+    ['Frens', 'Posats'],
+    ['Selector combustible', 'Tanc més ple'],
+    ['Mescla', 'Empobrida'],
+    ['Acceleradors', 'Obert 1/2 polzada'],
+    ['Master', 'On'],
+    ['Magnetos', 'Off'],
+  ]],
+  ['start', 'Arrencada', [
+    ['Bomba combustible', 'On'],
+    ['Mescla', 'Rica fins fluix combustible'],
+    ['Bomba combustible', 'Off'],
+    ['Mescla', 'Empobrida'],
+    ['CLEAR PROP', 'Cridat'],
+    ['Magnetos', 'START'],
+    ['Mescla', 'Rica al arrencar'],
+    ['Pressió oli', 'Verd 30 seg'],
+    ['RPM', '1000-1200'],
+  ]],
+  ['before-takeoff', 'Abans Enlairament', [
+    ['Frens', 'Posats'],
+    ['Acceleradors', '2000 RPM'],
+    ['Magnetos', 'Caiguda <175, dif <50'],
+    ['Vacuum', 'Verd'],
+    ['Pressió oli', 'Verd'],
+    ['Mescla', 'Rica'],
+    ['Selector combustible', 'Tanc més ple'],
+    ['Bomba combustible', 'On'],
+    ['Flaps', '0° o 25°'],
+    ['Trim', 'T/O'],
+    ['Portes', 'Tancades'],
+  ]],
+  ['takeoff', 'Enlairament', [
+    ['Acceleradors', 'Plens'],
+    ['Vr', '~60 KIAS'],
+    ['Vy', '79 KIAS'],
+  ]],
+  ['cruise', 'Creuer', [
+    ['Potència', '2300-2500 RPM'],
+    ['Mescla', 'Empobrida'],
+    ['Bomba combustible', 'Off >1000ft'],
+  ]],
+  ['before-landing', 'Abans Aterratge', [
+    ['Cinturons', 'Cordats'],
+    ['Selector combustible', 'Tanc més ple'],
+    ['Bomba combustible', 'On'],
+    ['Mescla', 'Rica'],
+    ['Flaps', 'Segons necessitat'],
+    ['Velocitat aprox', '70-80 KIAS'],
+  ]],
+  ['shutdown', 'Aturada', [
+    ['Frens', 'Posats'],
+    ['Avionica', 'Off'],
+    ['Magnetos', 'Off'],
+    ['Mescla', 'CUT-OFF'],
+    ['Master', 'Off'],
+    ['Llaus', 'Treta'],
+  ]],
+  ['emergency', 'Emergències', [
+    ['Velocitat planeig', '76 KIAS'],
+    ['Fallada motor', 'Camp + mayday'],
+    ['Foc motor', 'Mescla CUT-OFF, fuel OFF'],
+  ]],
+];
+
+function buildPhases(template) {
+  return template.map(([id, name, items]) => ({
+    id,
+    name,
+    items: items.map((it, i) => ({
+      id: `${id}-${i}`,
+      label: it[0],
+      value: it[1] || '',
+      note: it[2] || '',
+      state: 'pending', // pending | checked | skipped
+    })),
+  }));
+}
+
+const DEFAULT_AIRCRAFT = [
+  { id: 'c172', name: 'Cessna 172', registration: 'EC-XXX', description: 'Skyhawk – 4 places', phases: buildPhases(C172_PHASES) },
+  { id: 'c152', name: 'Cessna 152', registration: 'EC-XXX', description: 'Trainer – 2 places', phases: buildPhases(C152_PHASES) },
+  { id: 'pa28', name: 'Piper PA-28', registration: 'EC-XXX', description: 'Cherokee/Warrior – 4 places', phases: buildPhases(PA28_PHASES) },
+];
+
+// ============= STATE =============
+let state = {
+  aircraft: [],
+  activeAircraftId: null,
+  activePhaseId: null,
+  nightMode: false,
+  editing: false,
+  hideHint: false,
+};
+
+const STATE_KEY = 'checklist-vol-state-v1';
+
+async function loadState() {
+  const raw = await storage.get(STATE_KEY);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      state = { ...state, ...parsed };
+    } catch (e) {}
+  }
+  if (!state.aircraft || state.aircraft.length === 0) {
+    state.aircraft = JSON.parse(JSON.stringify(DEFAULT_AIRCRAFT));
+    state.activeAircraftId = state.aircraft[0].id;
+    state.activePhaseId = state.aircraft[0].phases[0].id;
+  }
+  if (!state.activeAircraftId || !state.aircraft.find(a => a.id === state.activeAircraftId)) {
+    state.activeAircraftId = state.aircraft[0].id;
+  }
+  const ac = currentAircraft();
+  if (!state.activePhaseId || !ac.phases.find(p => p.id === state.activePhaseId)) {
+    state.activePhaseId = ac.phases[0]?.id || null;
+  }
+}
+
+async function saveState() {
+  await storage.set(STATE_KEY, JSON.stringify(state));
+}
+
+function currentAircraft() {
+  return state.aircraft.find(a => a.id === state.activeAircraftId);
+}
+
+function currentPhase() {
+  const ac = currentAircraft();
+  return ac?.phases.find(p => p.id === state.activePhaseId);
+}
+
+// ============= UTILS =============
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+function toast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+}
+
+// ============= RENDER =============
+function render() {
+  document.documentElement.setAttribute('data-theme', state.nightMode ? 'night' : 'day');
+  document.body.classList.toggle('editing', state.editing);
+
+  const ac = currentAircraft();
+  document.getElementById('currentAircraftName').textContent = ac?.name || '—';
+  document.getElementById('currentAircraftReg').textContent = ac?.registration || '—';
+
+  renderPhaseTabs();
+  renderItems();
+  renderEditBtn();
+  renderInstallHint();
+}
+
+function renderInstallHint() {
+  const el = document.getElementById('installHint');
+  const isStandalone = window.navigator.standalone === true ||
+                       window.matchMedia('(display-mode: standalone)').matches;
+  if (state.hideHint || isStandalone) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="install-hint">
+      <button class="close-hint" id="closeHint" aria-label="Tanca">×</button>
+      <strong>Instal·la a l'iPad mini:</strong> obre aquesta pàgina a Safari → toca el botó <strong>Compartir</strong> → <strong>Afegir a la pantalla d'inici</strong>. Tindràs l'app a pantalla completa.
+    </div>`;
+  document.getElementById('closeHint').onclick = async () => {
+    state.hideHint = true;
+    await saveState();
+    render();
+  };
+}
+
+function renderPhaseTabs() {
+  const ac = currentAircraft();
+  if (!ac) return;
+  const tabs = document.getElementById('phaseTabs');
+  tabs.innerHTML = '';
+  ac.phases.forEach((p, idx) => {
+    const total = p.items.length;
+    const done = p.items.filter(i => i.state === 'checked' || i.state === 'skipped').length;
+    const complete = total > 0 && done === total;
+    const tab = document.createElement('div');
+    tab.className = 'phase-tab' + (p.id === state.activePhaseId ? ' active' : '') + (complete ? ' complete' : '');
+    tab.innerHTML = `
+      <span class="num">FASE ${String(idx + 1).padStart(2, '0')}</span>
+      <span class="name">${escapeHtml(p.name)}</span>
+      <span class="progress-dot">${done}/${total}</span>
+    `;
+    tab.onclick = async () => {
+      state.activePhaseId = p.id;
+      await saveState();
+      render();
+      const ph = document.getElementById('phaseTitle');
+      if (ph) ph.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    tabs.appendChild(tab);
+  });
+}
+
+function renderItems() {
+  const p = currentPhase();
+  const list = document.getElementById('itemsList');
+  const titleEl = document.getElementById('phaseTitle');
+  if (!p) { list.innerHTML = ''; titleEl.textContent = '—'; return; }
+  titleEl.textContent = p.name;
+
+  const done = p.items.filter(i => i.state === 'checked' || i.state === 'skipped').length;
+  document.getElementById('progressText').textContent = `${done}/${p.items.length}`;
+  document.getElementById('progressBar').style.width = p.items.length ? `${(done / p.items.length) * 100}%` : '0%';
+
+  list.innerHTML = '';
+  if (p.items.length === 0 && !state.editing) {
+    list.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <div>Aquesta fase no té cap element.</div>
+      <div style="font-size:13px;margin-top:6px">Toca "Edita" per afegir-ne.</div>
+    </div>`;
+    return;
+  }
+
+  p.items.forEach((it) => {
+    const row = document.createElement('div');
+    row.className = 'item' + (it.state === 'checked' ? ' checked' : '') + (it.state === 'skipped' ? ' skipped' : '');
+    row.innerHTML = `
+      <div class="checkbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          ${it.state === 'skipped' ? '<line x1="5" y1="12" x2="19" y2="12"/>' : '<polyline points="20 6 9 17 4 12"/>'}
+        </svg>
+      </div>
+      <div class="item-content">
+        <div class="item-label">${escapeHtml(it.label)}</div>
+        ${it.value ? `<div class="item-value">${escapeHtml(it.value)}</div>` : ''}
+        ${it.note ? `<div class="item-note">${escapeHtml(it.note)}</div>` : ''}
+      </div>
+      ${state.editing ? `
+        <div class="item-actions">
+          <div class="item-action edit-item" data-id="${it.id}" aria-label="Edita">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+          <div class="item-action move-up" data-id="${it.id}" aria-label="Puja">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </div>
+          <div class="item-action move-down" data-id="${it.id}" aria-label="Baixa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="item-action danger delete-item" data-id="${it.id}" aria-label="Elimina">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+          </div>
+        </div>
+      ` : ''}
+    `;
+    if (!state.editing) {
+      row.onclick = async () => {
+        it.state = it.state === 'checked' ? 'pending' : 'checked';
+        await saveState();
+        render();
+      };
+      let pressTimer;
+      row.addEventListener('touchstart', (e) => {
+        pressTimer = setTimeout(async () => {
+          it.state = it.state === 'skipped' ? 'pending' : 'skipped';
+          await saveState();
+          render();
+          toast(it.state === 'skipped' ? 'Marcat com a saltar' : 'Restaurat');
+        }, 550);
+      });
+      row.addEventListener('touchend', () => clearTimeout(pressTimer));
+      row.addEventListener('touchmove', () => clearTimeout(pressTimer));
+    }
+    list.appendChild(row);
+  });
+
+  if (state.editing) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-item-btn';
+    addBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Afegeix element`;
+    addBtn.onclick = () => openItemEditor(null);
+    list.appendChild(addBtn);
+  }
+
+  // Wire edit-mode buttons
+  if (state.editing) {
+    list.querySelectorAll('.delete-item').forEach(b => b.onclick = async (e) => {
+      e.stopPropagation();
+      const id = b.dataset.id;
+      const ph = currentPhase();
+      ph.items = ph.items.filter(i => i.id !== id);
+      await saveState();
+      render();
+    });
+    list.querySelectorAll('.edit-item').forEach(b => b.onclick = (e) => {
+      e.stopPropagation();
+      const id = b.dataset.id;
+      const it = currentPhase().items.find(i => i.id === id);
+      openItemEditor(it);
+    });
+    list.querySelectorAll('.move-up').forEach(b => b.onclick = async (e) => {
+      e.stopPropagation();
+      const id = b.dataset.id;
+      const ph = currentPhase();
+      const idx = ph.items.findIndex(i => i.id === id);
+      if (idx > 0) {
+        [ph.items[idx - 1], ph.items[idx]] = [ph.items[idx], ph.items[idx - 1]];
+        await saveState();
+        render();
+      }
+    });
+    list.querySelectorAll('.move-down').forEach(b => b.onclick = async (e) => {
+      e.stopPropagation();
+      const id = b.dataset.id;
+      const ph = currentPhase();
+      const idx = ph.items.findIndex(i => i.id === id);
+      if (idx >= 0 && idx < ph.items.length - 1) {
+        [ph.items[idx + 1], ph.items[idx]] = [ph.items[idx], ph.items[idx + 1]];
+        await saveState();
+        render();
+      }
+    });
+  }
+}
+
+function renderEditBtn() {
+  const btn = document.getElementById('editBtn');
+  btn.innerHTML = state.editing
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Llest`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edita`;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============= MODALS =============
+function openModal(title, bodyHtml, footerHtml) {
+  closeModal();
+  const m = document.createElement('div');
+  m.className = 'modal-backdrop';
+  m.id = 'modal';
+  m.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">${escapeHtml(title)}</div>
+        <button class="icon-btn" onclick="closeModal()" style="width:36px;height:36px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">${bodyHtml}</div>
+      ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}
+    </div>`;
+  m.onclick = closeModal;
+  document.body.appendChild(m);
+  return m;
+}
+
+function closeModal() {
+  const m = document.getElementById('modal');
+  if (m) m.remove();
+}
+
+window.closeModal = closeModal;
+
+function openItemEditor(item) {
+  const editing = !!item;
+  const html = `
+    <div class="field">
+      <label>Element</label>
+      <input id="iLabel" type="text" placeholder="Ex: Mescla" value="${escapeHtml(item?.label || '')}">
+    </div>
+    <div class="field">
+      <label>Valor / Acció</label>
+      <input id="iValue" class="mono" type="text" placeholder="Ex: RICA" value="${escapeHtml(item?.value || '')}">
+    </div>
+    <div class="field">
+      <label>Nota (opcional)</label>
+      <input id="iNote" type="text" placeholder="Ex: Si motor calent" value="${escapeHtml(item?.note || '')}">
+    </div>
+  `;
+  const footer = `
+    <button class="btn" onclick="closeModal()">Cancel·la</button>
+    <button class="btn primary" id="saveItemBtn">${editing ? 'Desa' : 'Afegeix'}</button>
+  `;
+  openModal(editing ? 'Edita element' : 'Nou element', html, footer);
+  setTimeout(() => document.getElementById('iLabel').focus(), 100);
+  document.getElementById('saveItemBtn').onclick = async () => {
+    const label = document.getElementById('iLabel').value.trim();
+    const value = document.getElementById('iValue').value.trim();
+    const note = document.getElementById('iNote').value.trim();
+    if (!label) { toast('Cal un nom'); return; }
+    const ph = currentPhase();
+    if (editing) {
+      item.label = label; item.value = value; item.note = note;
+    } else {
+      ph.items.push({ id: uid(), label, value, note, state: 'pending' });
+    }
+    await saveState();
+    closeModal();
+    render();
+  };
+}
+
+function openAircraftPicker() {
+  let html = '';
+  state.aircraft.forEach(a => {
+    const isActive = a.id === state.activeAircraftId;
+    html += `
+      <div class="aircraft-row ${isActive ? 'active' : ''}" data-id="${a.id}">
+        <div class="info">
+          <div class="name">${escapeHtml(a.name)}</div>
+          <div class="reg">${escapeHtml(a.registration || '—')}</div>
+          ${a.description ? `<div style="font-size:12px;color:var(--text-3);margin-top:2px">${escapeHtml(a.description)}</div>` : ''}
+        </div>
+        <button class="icon-btn edit-ac" data-id="${a.id}" style="width:38px;height:38px" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+    `;
+  });
+  const footer = `
+    <button class="btn" id="addAircraftBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nou avió
+    </button>
+  `;
+  openModal('Selecciona avió', html, footer);
+  document.querySelectorAll('.aircraft-row').forEach(r => {
+    r.onclick = async () => {
+      state.activeAircraftId = r.dataset.id;
+      const ac = currentAircraft();
+      state.activePhaseId = ac.phases[0]?.id || null;
+      await saveState();
+      closeModal();
+      render();
+    };
+  });
+  document.querySelectorAll('.edit-ac').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      const id = b.dataset.id;
+      openAircraftEditor(state.aircraft.find(a => a.id === id));
+    };
+  });
+  document.getElementById('addAircraftBtn').onclick = () => openAircraftEditor(null);
+}
+
+function openAircraftEditor(ac) {
+  const editing = !!ac;
+  const templateOptions = ['Buit (sense fases)', ...DEFAULT_AIRCRAFT.map(a => `Còpia de ${a.name}`), ...state.aircraft.filter(a => !DEFAULT_AIRCRAFT.find(d => d.id === a.id)).map(a => `Còpia de ${a.name}`)];
+
+  let html = `
+    <div class="field">
+      <label>Model d'avió</label>
+      <input id="acName" type="text" placeholder="Ex: Tecnam P2002" value="${escapeHtml(ac?.name || '')}">
+    </div>
+    <div class="field">
+      <label>Matrícula</label>
+      <input id="acReg" class="mono" type="text" placeholder="Ex: EC-ABC" value="${escapeHtml(ac?.registration || '')}">
+    </div>
+    <div class="field">
+      <label>Descripció (opcional)</label>
+      <input id="acDesc" type="text" placeholder="Ex: Ultralleuger – 2 places" value="${escapeHtml(ac?.description || '')}">
+    </div>
+  `;
+  if (!editing) {
+    html += `
+      <div class="field">
+        <label>Plantilla inicial</label>
+        <select id="acTemplate">
+          <option value="empty">Buit (sense fases)</option>
+          ${DEFAULT_AIRCRAFT.map(a => `<option value="default:${a.id}">Còpia de ${escapeHtml(a.name)}</option>`).join('')}
+          ${state.aircraft.filter(a => !DEFAULT_AIRCRAFT.find(d => d.id === a.id)).map(a => `<option value="custom:${a.id}">Còpia de ${escapeHtml(a.name)}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }
+  const footer = `
+    ${editing ? `<button class="btn danger" id="deleteAcBtn">Elimina avió</button>` : ''}
+    <button class="btn" onclick="closeModal()">Cancel·la</button>
+    <button class="btn primary" id="saveAcBtn">${editing ? 'Desa' : 'Crea'}</button>
+  `;
+  openModal(editing ? 'Edita avió' : 'Nou avió', html, footer);
+
+  document.getElementById('saveAcBtn').onclick = async () => {
+    const name = document.getElementById('acName').value.trim();
+    const reg = document.getElementById('acReg').value.trim();
+    const desc = document.getElementById('acDesc').value.trim();
+    if (!name) { toast('Cal un nom'); return; }
+    if (editing) {
+      ac.name = name; ac.registration = reg; ac.description = desc;
+    } else {
+      const tpl = document.getElementById('acTemplate').value;
+      let phases = [];
+      if (tpl.startsWith('default:')) {
+        const src = DEFAULT_AIRCRAFT.find(a => a.id === tpl.slice(8));
+        phases = JSON.parse(JSON.stringify(src.phases));
+        phases.forEach(p => p.items.forEach(i => i.state = 'pending'));
+      } else if (tpl.startsWith('custom:')) {
+        const src = state.aircraft.find(a => a.id === tpl.slice(7));
+        phases = JSON.parse(JSON.stringify(src.phases));
+        phases.forEach(p => p.items.forEach(i => i.state = 'pending'));
+      } else {
+        // empty default: at least one phase so user can start
+        phases = [{ id: uid(), name: 'Pre-Vol', items: [] }];
+      }
+      const newAc = { id: uid(), name, registration: reg, description: desc, phases };
+      state.aircraft.push(newAc);
+      state.activeAircraftId = newAc.id;
+      state.activePhaseId = newAc.phases[0]?.id || null;
+    }
+    await saveState();
+    closeModal();
+    render();
+  };
+  if (editing) {
+    document.getElementById('deleteAcBtn').onclick = async () => {
+      if (state.aircraft.length === 1) { toast('Has de tenir almenys 1 avió'); return; }
+      if (!confirm(`Eliminar "${ac.name}"? Aquesta acció no es pot desfer.`)) return;
+      state.aircraft = state.aircraft.filter(a => a.id !== ac.id);
+      if (state.activeAircraftId === ac.id) {
+        state.activeAircraftId = state.aircraft[0].id;
+        state.activePhaseId = state.aircraft[0].phases[0]?.id || null;
+      }
+      await saveState();
+      closeModal();
+      render();
+    };
+  }
+}
+
+function openSettings() {
+  const ac = currentAircraft();
+  const html = `
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Mode nocturn</div>
+        <div class="setting-desc">Filtre vermell per vol nocturn</div>
+      </div>
+      <div class="toggle ${state.nightMode ? 'on' : ''}" id="nightToggle"></div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Edita fases de "${escapeHtml(ac?.name || '')}"</div>
+        <div class="setting-desc">Afegeix o elimina fases d'aquest avió</div>
+      </div>
+      <button class="icon-btn" id="editPhasesBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Reinicia tot el checklist</div>
+        <div class="setting-desc">Desmarca tots els elements de tots els avions</div>
+      </div>
+      <button class="icon-btn" id="resetAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Exporta dades (JSON)</div>
+        <div class="setting-desc">Descarrega tots els avions i checklists</div>
+      </div>
+      <button class="icon-btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Importa dades (JSON)</div>
+        <div class="setting-desc">Substitueix amb un fitxer previ</div>
+      </div>
+      <button class="icon-btn" id="importBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);line-height:1.6">
+      <strong style="color:var(--text-2)">Consell d'ús:</strong><br>
+      • Toca un element per marcar-lo<br>
+      • Manté premut per marcar com a "saltar" (no aplicable)<br>
+      • Toca "Edita" per modificar la fase actual<br>
+      • Les checklists per defecte són plantilles genèriques – verifica sempre amb el POH del teu avió
+    </div>
+  `;
+  openModal('Ajustaments', html, '');
+
+  document.getElementById('nightToggle').onclick = async () => {
+    state.nightMode = !state.nightMode;
+    await saveState();
+    document.getElementById('nightToggle').classList.toggle('on', state.nightMode);
+    render();
+  };
+  document.getElementById('editPhasesBtn').onclick = () => openPhasesEditor();
+  document.getElementById('resetAllBtn').onclick = async () => {
+    if (!confirm('Vols desmarcar tots els elements?')) return;
+    state.aircraft.forEach(a => a.phases.forEach(p => p.items.forEach(i => i.state = 'pending')));
+    await saveState();
+    closeModal();
+    render();
+    toast('Tots els checklists reiniciats');
+  };
+  document.getElementById('exportBtn').onclick = () => {
+    const data = JSON.stringify(state, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `checklist-vol-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Backup descarregat');
+  };
+  document.getElementById('importBtn').onclick = () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'application/json';
+    inp.onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const text = await f.text();
+      try {
+        const parsed = JSON.parse(text);
+        if (!parsed.aircraft || !Array.isArray(parsed.aircraft)) throw new Error();
+        if (!confirm('Substituir totes les dades actuals?')) return;
+        state = { ...state, ...parsed };
+        await saveState();
+        closeModal();
+        render();
+        toast('Dades importades');
+      } catch { toast('Fitxer no vàlid'); }
+    };
+    inp.click();
+  };
+}
+
+function openPhasesEditor() {
+  const ac = currentAircraft();
+  let html = '';
+  ac.phases.forEach((p, i) => {
+    html += `
+      <div class="aircraft-row" style="cursor:default">
+        <div class="info">
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div style="font-size:12px;color:var(--text-3)">${p.items.length} elements</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="icon-btn rename-phase" data-id="${p.id}" style="width:36px;height:36px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn move-phase-up" data-id="${p.id}" style="width:36px;height:36px;${i===0?'opacity:0.3':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+          <button class="icon-btn move-phase-down" data-id="${p.id}" style="width:36px;height:36px;${i===ac.phases.length-1?'opacity:0.3':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <button class="icon-btn delete-phase" data-id="${p.id}" style="width:36px;height:36px;color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    `;
+  });
+  const footer = `
+    <button class="btn" onclick="closeModal()">Tanca</button>
+    <button class="btn primary" id="addPhaseBtn">Nova fase</button>
+  `;
+  openModal('Fases de ' + ac.name, html, footer);
+  document.querySelectorAll('.rename-phase').forEach(b => b.onclick = async () => {
+    const id = b.dataset.id;
+    const p = ac.phases.find(x => x.id === id);
+    const name = prompt('Nom de la fase:', p.name);
+    if (name && name.trim()) {
+      p.name = name.trim();
+      await saveState();
+      openPhasesEditor();
+      render();
+    }
+  });
+  document.querySelectorAll('.move-phase-up').forEach(b => b.onclick = async () => {
+    const id = b.dataset.id;
+    const idx = ac.phases.findIndex(x => x.id === id);
+    if (idx > 0) {
+      [ac.phases[idx-1], ac.phases[idx]] = [ac.phases[idx], ac.phases[idx-1]];
+      await saveState();
+      openPhasesEditor();
+      render();
+    }
+  });
+  document.querySelectorAll('.move-phase-down').forEach(b => b.onclick = async () => {
+    const id = b.dataset.id;
+    const idx = ac.phases.findIndex(x => x.id === id);
+    if (idx < ac.phases.length - 1) {
+      [ac.phases[idx+1], ac.phases[idx]] = [ac.phases[idx], ac.phases[idx+1]];
+      await saveState();
+      openPhasesEditor();
+      render();
+    }
+  });
+  document.querySelectorAll('.delete-phase').forEach(b => b.onclick = async () => {
+    if (ac.phases.length === 1) { toast('Cal almenys una fase'); return; }
+    const id = b.dataset.id;
+    const p = ac.phases.find(x => x.id === id);
+    if (!confirm(`Eliminar fase "${p.name}"?`)) return;
+    ac.phases = ac.phases.filter(x => x.id !== id);
+    if (state.activePhaseId === id) state.activePhaseId = ac.phases[0].id;
+    await saveState();
+    openPhasesEditor();
+    render();
+  });
+  document.getElementById('addPhaseBtn').onclick = async () => {
+    const name = prompt('Nom de la nova fase:');
+    if (!name || !name.trim()) return;
+    ac.phases.push({ id: uid(), name: name.trim(), items: [] });
+    await saveState();
+    openPhasesEditor();
+    render();
+  };
+}
+
+// ============= EVENTS =============
+document.getElementById('aircraftBtn').onclick = openAircraftPicker;
+document.getElementById('aircraftSelector').onclick = openAircraftPicker;
+document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('editBtn').onclick = async () => {
+  state.editing = !state.editing;
+  await saveState();
+  render();
+};
+document.getElementById('resetBtn').onclick = async () => {
+  const p = currentPhase();
+  if (!p) return;
+  if (!confirm(`Desmarcar tots els elements de "${p.name}"?`)) return;
+  p.items.forEach(i => i.state = 'pending');
+  await saveState();
+  render();
+  toast('Fase reiniciada');
+};
+document.getElementById('nextBtn').onclick = async () => {
+  const ac = currentAircraft();
+  const idx = ac.phases.findIndex(p => p.id === state.activePhaseId);
+  const next = ac.phases[idx + 1] || ac.phases[0];
+  state.activePhaseId = next.id;
+  await saveState();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Prevent iOS pull-to-refresh / scroll bounce on the whole page
+document.addEventListener('touchmove', (e) => {
+  if (e.target.closest('.items, .modal-body, .phase-tabs')) return;
+  e.preventDefault();
+}, { passive: false });
+
+// ============= INIT =============
+(async () => {
+  await loadState();
+  render();
+})();
+</script>
+</body>
+</html>
